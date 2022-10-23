@@ -11,7 +11,7 @@ class FakeCatalog(SupermarketCatalog):
         return self._items
 
     def add_product(self, product: Product, price: float) -> None:
-        item: SupermarketCatalogItem | None = self._find_item_by_product(product)
+        item: SupermarketCatalogItem | None = self.find_item_by_product(product)
         if item:
             self._items[self._items.index(item)].price = price
         else:
@@ -21,5 +21,5 @@ class FakeCatalog(SupermarketCatalog):
         item: SupermarketCatalogItem | None = self._find_item_by_product(product)
         return item.price if item else None
 
-    def _find_item_by_product(self, product: Product) -> SupermarketCatalogItem | None:
+    def find_item_by_product(self, product: Product) -> SupermarketCatalogItem | None:
         return next((item for item in self._items if item.product == product), None)
