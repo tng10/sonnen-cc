@@ -1,5 +1,6 @@
-from model_objects import Product, ProductUnit
+from model_objects import Offer, Product, ProductUnit, SpecialOfferType
 from shopping_cart import NewShoppingCart, ShoppingCartItem
+from teller import NewTeller
 from tests.fake_catalog import FakeCatalog
 
 
@@ -52,9 +53,45 @@ def test_catalog_add_differnt_items():
     assert catalog_toothbrush_item is not None
     assert catalog_toothbrush_item.product == toothbrush
     assert catalog_toothbrush_item.price == toothbrush_price
-    
+
     catalog_apples_item = catalog.find_item_by_product(apples)
 
     assert catalog_apples_item is not None
     assert catalog_apples_item.product == apples
     assert catalog_apples_item.price == apples_price
+
+
+def test_teller_add_same_special_offer_twice():
+    catalog = FakeCatalog()
+    toothbrush = Product("toothbrush", ProductUnit.EACH)
+
+    toothbrush_price = 0.99
+    catalog.add_product(toothbrush, toothbrush_price)
+
+    offer = Offer(SpecialOfferType.TEN_PERCENT_DISCOUNT, toothbrush, 10.0)
+
+    teller = NewTeller(catalog)
+    teller.add_special_offer(offer)
+    teller.add_special_offer(offer)
+
+    assert len(teller.offers) == 1
+
+def test_teller_add_different_special_offers():
+    catalog = FakeCatalog()
+    toothbrush = Product("toothbrush", ProductUnit.EACH)
+    apples = Product("apples", ProductUnit.KILO)
+
+    toothbrush_price = 0.99
+    catalog.add_product(toothbrush, toothbrush_price)
+
+    apples_price = 1.99
+    catalog.add_product(apples, apples_price)
+
+    toothbrush_offer = Offer(SpecialOfferType.TEN_PERCENT_DISCOUNT, toothbrush, 10.0)
+    apples_offer = Offer(SpecialOfferType.TEN_PERCENT_DISCOUNT, apples, 10.0)
+
+    teller = NewTeller(catalog)
+    teller.add_special_offer(toothbrush_offer)
+    teller.add_special_offer(apples_offer)
+
+    assert len(teller.offers) == 2

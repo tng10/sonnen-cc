@@ -18,7 +18,7 @@ class FakeCatalog(SupermarketCatalog):
             self._items.append(SupermarketCatalogItem(product, price))
 
     def unit_price(self, product: Product) -> float | None:
-        item: SupermarketCatalogItem | None = self._find_item_by_product(product)
+        item: SupermarketCatalogItem | None = self.find_item_by_product(product)
         return item.price if item else None
 
     def find_item_by_product(self, product: Product) -> SupermarketCatalogItem | None:
