@@ -1,15 +1,25 @@
-from catalog import SupermarketCatalog
+from catalog import SupermarketCatalog, SupermarketCatalogItem
+from model_objects import Product
 
 
 class FakeCatalog(SupermarketCatalog):
     def __init__(self):
-        self.products = {}
-        self.prices = {}
+        self._items: list[SupermarketCatalogItem] = list()
 
-    def add_product(self, product, price):
-        self.products[product.name] = product
-        self.prices[product.name] = price
+    @property
+    def items(self) -> list[SupermarketCatalogItem]:
+        return self._items
 
-    def unit_price(self, product):
-        return self.prices[product.name]
+    def add_product(self, product: Product, price: float) -> None:
+        item: SupermarketCatalogItem | None = self._find_item_by_product(product)
+        if item:
+            self._items[self._items.index(item)].price = price
+        else:
+            self._items.append(SupermarketCatalogItem(product, price))
 
+    def unit_price(self, product: Product) -> float | None:
+        item: SupermarketCatalogItem | None = self._find_item_by_product(product)
+        return item.price if item else None
+
+    def _find_item_by_product(self, product: Product) -> SupermarketCatalogItem | None:
+        return next((item for item in self._items if item.product == product), None)
