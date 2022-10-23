@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "sonnen-cc"
+version = "0.1.0"
+description = ""
+authors = ["Júlio Lacerda <julio.castro.lacerda@gmail.com>"]
+readme = "README.md"
+packages = [{include = "sonnen_cc"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+approvaltests = "^7.2.0"
+python-dateutil = "^2.8.2"
+pytest-approvaltests = "^0.2.4"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
