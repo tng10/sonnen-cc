@@ -1,6 +1,6 @@
 from model_objects import Offer, Product, ProductUnit, SpecialOfferType
-from shopping_cart import NewShoppingCart, ShoppingCartItem
-from teller import NewTeller
+from shopping_cart import ShoppingCart, ShoppingCartItem
+from teller import Teller
 from tests.fake_catalog import FakeCatalog
 
 
@@ -10,7 +10,7 @@ def test_cart_add_same_item_twice():
 
     apples_quantity = 2.5
 
-    cart: NewShoppingCart = NewShoppingCart()
+    cart: ShoppingCart = ShoppingCart()
     item: ShoppingCartItem = ShoppingCartItem(apples, apples_quantity)
 
     cart.add_item(item)
@@ -70,11 +70,12 @@ def test_teller_add_same_special_offer_twice():
 
     offer = Offer(SpecialOfferType.TEN_PERCENT_DISCOUNT, toothbrush, 10.0)
 
-    teller = NewTeller(catalog)
+    teller = Teller(catalog)
     teller.add_special_offer(offer)
     teller.add_special_offer(offer)
 
     assert len(teller.offers) == 1
+
 
 def test_teller_add_different_special_offers():
     catalog = FakeCatalog()
@@ -90,7 +91,7 @@ def test_teller_add_different_special_offers():
     toothbrush_offer = Offer(SpecialOfferType.TEN_PERCENT_DISCOUNT, toothbrush, 10.0)
     apples_offer = Offer(SpecialOfferType.TEN_PERCENT_DISCOUNT, apples, 10.0)
 
-    teller = NewTeller(catalog)
+    teller = Teller(catalog)
     teller.add_special_offer(toothbrush_offer)
     teller.add_special_offer(apples_offer)
 

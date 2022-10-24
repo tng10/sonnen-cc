@@ -32,7 +32,7 @@ class Offer:
 
 
 class Discount:
-    def __init__(self, product, description, discount_amount):
-        self.product = product
-        self.description = description
-        self.discount_amount = discount_amount
+    def __init__(self, product: Product, description: str, discount_amount: float):
+        self.product: Product = product
+        self.description: str = description
+        self.discount_amount: float = discount_amount

@@ -1,35 +1,39 @@
+from model_objects import Discount, Product
+from shopping_cart_item import ShoppingCartItem
+
 
 class ReceiptItem:
-    def __init__(self, product, quantity, price, total_price):
-        self.product = product
-        self.quantity = quantity
-        self.price = price
-        self.total_price = total_price
+    def __init__(self, cart_item: ShoppingCartItem, unit_price: float):
+        self.product: Product = cart_item.product
+        self.quantity: float = cart_item.quantity
+        self.price: float = unit_price
+
+    @property
+    def total_price(self):
+        return self.price * self.quantity
 
 
 class Receipt:
     def __init__(self):
-        self._items = []
-        self._discounts = []
+        self._items: list[ReceiptItem] = []
+        self._discounts: list[Discount] = []
 
     def total_price(self):
-        total = 0
-        for item in self.items:
-            total += item.total_price
-        for discount in self.discounts:
-            total += discount.discount_amount
+        total: float = sum([item.total_price for item in self.items]) + sum(
+            [discount.discount_amount for discount in self._discounts]
+        )
         return total
 
-    def add_product(self, product, quantity, price, total_price):
-        self._items.append(ReceiptItem(product, quantity, price, total_price))
+    def add_item(self, item: ReceiptItem) -> None:
+        self._items.append(item)
 
-    def add_discount(self, discount):
+    def add_discount(self, discount: Discount) -> None:
         self._discounts.append(discount)
 
     @property
-    def items(self):
+    def items(self) -> list[ReceiptItem]:
         return self._items[:]
 
     @property
-    def discounts(self):
+    def discounts(self) -> list[Discount]:
         return self._discounts[:]

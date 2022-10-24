@@ -1,10 +1,11 @@
 from catalog import SupermarketCatalog
 from typing import Dict, Any
-from model_objects import Offer
-from receipt import Receipt
+from model_objects import Offer, Product
+from receipt import Receipt, ReceiptItem
+from shopping_cart import ShoppingCart
 
 
-class NewTeller:
+class Teller:
     def __init__(self, catalog: SupermarketCatalog):
         self._catalog: SupermarketCatalog = catalog
         self._offers: Dict[str, Offer] = {}
@@ -20,39 +21,18 @@ class NewTeller:
     def add_special_offer(self, offer: Offer) -> None:
         self._offers.setdefault(offer.product.name, offer)
 
-    def checks_out_articles_from(self, the_cart):
-        receipt = Receipt()
-        product_quantities = the_cart.items
-        for pq in product_quantities:
-            p = pq.product
-            quantity = pq.quantity
-            unit_price = self._catalog.unit_price(p)
-            price = quantity * unit_price
-            receipt.add_product(p, quantity, unit_price, price)
+    def checks_out_articles_from(self, cart: ShoppingCart) -> Receipt:
 
-        the_cart.handle_offers(receipt, self._offers, self._catalog)
+        receipt: Receipt = Receipt()
+        for cart_item in cart.items:
 
-        return receipt
+            catalog_item = self._catalog.find_item_by_product(cart_item.product)
+            if catalog_item:
+                receipt_item: ReceiptItem = ReceiptItem(cart_item, catalog_item.price)
+                receipt.add_item(receipt_item)
+            else:
+                raise ValueError("Not possible to calculate the price")
 
-
-class Teller:
-    def __init__(self, catalog):
-        self.catalog = catalog
-        self.offers = {}
-
-    def add_special_offer(self, offer_type, product, argument):
-        self.offers[product] = Offer(offer_type, product, argument)
-
-    def checks_out_articles_from(self, the_cart):
-        receipt = Receipt()
-        product_quantities = the_cart.items
-        for pq in product_quantities:
-            p = pq.product
-            quantity = pq.quantity
-            unit_price = self.catalog.unit_price(p)
-            price = quantity * unit_price
-            receipt.add_product(p, quantity, unit_price, price)
-
-        the_cart.handle_offers(receipt, self.offers, self.catalog)
+        cart.handle_offers(receipt, self._offers, self._catalog)
 
         return receipt

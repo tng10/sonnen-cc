@@ -1,7 +1,8 @@
 import pytest
 
-from model_objects import Product, SpecialOfferType, ProductUnit
+from model_objects import Offer, Product, SpecialOfferType, ProductUnit
 from shopping_cart import ShoppingCart
+from shopping_cart_item import ShoppingCartItem
 from teller import Teller
 from tests.fake_catalog import FakeCatalog
 
@@ -15,10 +16,12 @@ def test_ten_percent_discount():
     catalog.add_product(apples, 1.99)
 
     teller = Teller(catalog)
-    teller.add_special_offer(SpecialOfferType.TEN_PERCENT_DISCOUNT, toothbrush, 10.0)
+    offer = Offer(SpecialOfferType.TEN_PERCENT_DISCOUNT, toothbrush, 10.0)
+    teller.add_special_offer(offer)
 
     cart = ShoppingCart()
-    cart.add_item_quantity(apples, 2.5)
+    cart_item = ShoppingCartItem(apples, 2.5)
+    cart.add_item(cart_item)
 
     receipt = teller.checks_out_articles_from(cart)
 
