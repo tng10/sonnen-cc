@@ -1,4 +1,3 @@
-from email.mime import base
 from enum import Enum
 import math
 
@@ -27,11 +26,21 @@ class SpecialOfferType(Enum):
     FIVE_FOR_AMOUNT = 4
 
 
+class BundleOfferType(Enum):
+    TEN_PERCENT_DISCOUNT = 10
+
+
 class Offer:
     def __init__(self, offer_type: SpecialOfferType, product: Product, argument: float):
         self.offer_type: SpecialOfferType = offer_type
         self.product: Product = product
         self.argument: float = argument
+
+
+class Bundle:
+    def __init__(self, offer_type: BundleOfferType, products: list[Product]):
+        self.offer_type: BundleOfferType = offer_type
+        self.products: list[Product] = products
 
 
 class Discount:
@@ -41,13 +50,21 @@ class Discount:
         SpecialOfferType.THREE_FOR_TWO: 3,
     }
 
-    def __init__(self, product: Product, description: str, discount_amount: float):
-        self.product: Product = product
+    def __init__(
+        self, products: list[Product], description: str, discount_amount: float
+    ):
+        self.products: list[Product] = products
         self.description: str = description
         self.discount_amount: float = discount_amount
 
+    @property
+    def product(self):
+        if len(self.products) == 1:
+            return self.products[0]
+        return None
+
     @staticmethod
-    def calculate_amount(
+    def calculate_offer_amount(
         offer: Offer, unit_price: float, quantity: float
     ) -> float | None:
         quantity_as_int = math.floor(quantity)
@@ -88,7 +105,20 @@ class Discount:
         return base_value * -1
 
     @staticmethod
-    def get_description(offer: Offer) -> str | None:
+    def calculate_bundle_amount(
+        bundle: Bundle,
+        price: float,
+    ) -> float | None:
+
+        base_value = price
+
+        if bundle.offer_type == BundleOfferType.TEN_PERCENT_DISCOUNT:
+            base_value *= bundle.offer_type.value / 100
+
+        return base_value * -1
+
+    @staticmethod
+    def get_offer_description(offer: Offer) -> str | None:
         if offer.offer_type in [
             SpecialOfferType.TWO_FOR_AMOUNT,
             SpecialOfferType.FIVE_FOR_AMOUNT,
@@ -98,4 +128,10 @@ class Discount:
             return f"{str(Discount.QUANTITY_BASIS[offer.offer_type])} for 2"
         elif offer.offer_type == SpecialOfferType.TEN_PERCENT_DISCOUNT:
             return f"{str(offer.argument)} % off"
+        return None
+
+    @staticmethod
+    def get_bundle_description(bundle: Bundle) -> str | None:
+        if bundle.offer_type in [BundleOfferType.TEN_PERCENT_DISCOUNT]:
+            return f"{str(bundle.offer_type.value)} % off"
         return None

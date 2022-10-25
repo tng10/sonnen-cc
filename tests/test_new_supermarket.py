@@ -1,4 +1,12 @@
-from model_objects import Offer, Product, ProductUnit, SpecialOfferType
+import pytest
+from model_objects import (
+    Bundle,
+    BundleOfferType,
+    Offer,
+    Product,
+    ProductUnit,
+    SpecialOfferType,
+)
 from shopping_cart import ShoppingCart, ShoppingCartItem
 from teller import Teller
 from tests.fake_catalog import FakeCatalog
@@ -96,3 +104,272 @@ def test_teller_add_different_special_offers():
     teller.add_special_offer(apples_offer)
 
     assert len(teller.offers) == 2
+
+
+def test_teller_add_one_bundle():
+    catalog = FakeCatalog()
+    toothbrush = Product("toothbrush", ProductUnit.EACH)
+    toothpaste = Product("toothpaste", ProductUnit.EACH)
+
+    toothbrush_price = 0.99
+    catalog.add_product(toothbrush, toothbrush_price)
+
+    toothpaste_price = 1.79
+    catalog.add_product(toothpaste, toothpaste_price)
+
+    toothbrush_and_toothpaste_bundle = Bundle(
+        BundleOfferType.TEN_PERCENT_DISCOUNT, [toothbrush, toothpaste]
+    )
+
+    teller = Teller(catalog)
+    teller.add_special_bundle(toothbrush_and_toothpaste_bundle)
+
+    assert len(teller.bundles) == 1
+
+
+def test_teller_add_same_bundle_twice():
+    catalog = FakeCatalog()
+    toothbrush = Product("toothbrush", ProductUnit.EACH)
+    toothpaste = Product("toothpaste", ProductUnit.EACH)
+
+    toothbrush_price = 0.99
+    catalog.add_product(toothbrush, toothbrush_price)
+
+    toothpaste_price = 1.79
+    catalog.add_product(toothpaste, toothpaste_price)
+
+    toothbrush_and_toothpaste_bundle = Bundle(
+        BundleOfferType.TEN_PERCENT_DISCOUNT, [toothbrush, toothpaste]
+    )
+
+    teller = Teller(catalog)
+    teller.add_special_bundle(toothbrush_and_toothpaste_bundle)
+    teller.add_special_bundle(toothbrush_and_toothpaste_bundle)
+
+    assert len(teller.bundles) == 1
+
+
+def test_ten_percent_discount_on_bundle():
+    catalog = FakeCatalog()
+    toothbrush = Product("toothbrush", ProductUnit.EACH)
+    toothpaste = Product("toothpaste", ProductUnit.EACH)
+
+    toothbrush_price = 0.99
+    catalog.add_product(toothbrush, toothbrush_price)
+
+    toothpaste_price = 1.79
+    catalog.add_product(toothpaste, toothpaste_price)
+
+    total_price = toothbrush_price + toothpaste_price
+    total_price_with_discount = total_price * 0.9
+
+    toothbrush_and_toothpaste_bundle = Bundle(
+        BundleOfferType.TEN_PERCENT_DISCOUNT, [toothbrush, toothpaste]
+    )
+
+    teller = Teller(catalog)
+    teller.add_special_bundle(toothbrush_and_toothpaste_bundle)
+
+    cart = ShoppingCart()
+    toothbrush_cart_item = ShoppingCartItem(toothbrush, 1)
+    toothpaste_cart_item = ShoppingCartItem(toothpaste, 1)
+    cart.add_item(toothbrush_cart_item)
+    cart.add_item(toothpaste_cart_item)
+
+    receipt = teller.checks_out_articles_from(cart)
+
+    assert total_price_with_discount == pytest.approx(receipt.total_price(), 0.01)
+
+    assert 1 == len(receipt.discounts)
+    assert 2 == len(receipt.items)
+
+    assert toothbrush in [item.product for item in receipt.items]
+    assert toothpaste in [item.product for item in receipt.items]
+
+    toothbrush_item = next(
+        (item for item in receipt.items if item.product == toothbrush), None
+    )
+    toothpaste_item = next(
+        (item for item in receipt.items if item.product == toothpaste), None
+    )
+
+    assert toothbrush_item is not None
+    assert toothpaste_item is not None
+
+    assert 1 == toothbrush_item.quantity
+    assert 1 == toothpaste_item.quantity
+
+
+def test_ten_percent_discount_on_bundle_and_additional_product():
+    catalog = FakeCatalog()
+    toothbrush = Product("toothbrush", ProductUnit.EACH)
+    toothpaste = Product("toothpaste", ProductUnit.EACH)
+
+    toothbrush_price = 0.99
+    catalog.add_product(toothbrush, toothbrush_price)
+
+    toothpaste_price = 1.79
+    catalog.add_product(toothpaste, toothpaste_price)
+
+    total_price = toothbrush_price + toothpaste_price
+    total_price_with_discount = (total_price * 0.9) + toothpaste_price
+
+    toothbrush_and_toothpaste_bundle = Bundle(
+        BundleOfferType.TEN_PERCENT_DISCOUNT, [toothbrush, toothpaste]
+    )
+
+    teller = Teller(catalog)
+    teller.add_special_bundle(toothbrush_and_toothpaste_bundle)
+
+    cart = ShoppingCart()
+    toothbrush_cart_item = ShoppingCartItem(toothbrush, 1)
+    toothpaste_cart_item = ShoppingCartItem(toothpaste, 1)
+    cart.add_item(toothbrush_cart_item)
+    cart.add_item(toothpaste_cart_item)
+    cart.add_item(toothpaste_cart_item)
+
+    receipt = teller.checks_out_articles_from(cart)
+
+    assert total_price_with_discount == pytest.approx(receipt.total_price(), 0.01)
+
+    assert 1 == len(receipt.discounts)
+    assert 2 == len(receipt.items)
+
+    assert toothbrush in [item.product for item in receipt.items]
+    assert toothpaste in [item.product for item in receipt.items]
+
+    toothbrush_item = next(
+        (item for item in receipt.items if item.product == toothbrush), None
+    )
+    toothpaste_item = next(
+        (item for item in receipt.items if item.product == toothpaste), None
+    )
+
+    assert toothbrush_item is not None
+    assert toothpaste_item is not None
+
+    assert 1 == toothbrush_item.quantity
+    assert 2 == toothpaste_item.quantity
+
+
+def test_ten_percent_discount_on_bundle_twice():
+    catalog = FakeCatalog()
+    toothbrush = Product("toothbrush", ProductUnit.EACH)
+    toothpaste = Product("toothpaste", ProductUnit.EACH)
+
+    toothbrush_price = 0.99
+    catalog.add_product(toothbrush, toothbrush_price)
+
+    toothpaste_price = 1.79
+    catalog.add_product(toothpaste, toothpaste_price)
+
+    total_price = toothbrush_price + toothpaste_price
+    total_price_with_discount = (total_price * 0.9) * 2
+
+    toothbrush_and_toothpaste_bundle = Bundle(
+        BundleOfferType.TEN_PERCENT_DISCOUNT, [toothbrush, toothpaste]
+    )
+
+    teller = Teller(catalog)
+    teller.add_special_bundle(toothbrush_and_toothpaste_bundle)
+
+    cart = ShoppingCart()
+    toothbrush_cart_item = ShoppingCartItem(toothbrush, 1)
+    toothpaste_cart_item = ShoppingCartItem(toothpaste, 1)
+    cart.add_item(toothbrush_cart_item)
+    cart.add_item(toothbrush_cart_item)
+    cart.add_item(toothpaste_cart_item)
+    cart.add_item(toothpaste_cart_item)
+
+    receipt = teller.checks_out_articles_from(cart)
+
+    assert total_price_with_discount == pytest.approx(receipt.total_price(), 0.01)
+
+    assert 2 == len(receipt.discounts)
+    assert 2 == len(receipt.items)
+    assert 4 == sum([item.quantity for item in receipt.items])
+
+    assert toothbrush in [item.product for item in receipt.items]
+    assert toothpaste in [item.product for item in receipt.items]
+
+    toothbrush_item = next(
+        (item for item in receipt.items if item.product == toothbrush), None
+    )
+    toothpaste_item = next(
+        (item for item in receipt.items if item.product == toothpaste), None
+    )
+
+    assert toothbrush_item is not None
+    assert toothpaste_item is not None
+
+    assert 2 == toothbrush_item.quantity
+    assert 2 == toothpaste_item.quantity
+
+
+def test_ten_percent_discount_on_bundle_twice_and_special_offer():
+    catalog = FakeCatalog()
+    toothbrush = Product("toothbrush", ProductUnit.EACH)
+    toothpaste = Product("toothpaste", ProductUnit.EACH)
+    apples = Product("apples", ProductUnit.KILO)
+
+    toothbrush_price = 0.99
+    catalog.add_product(toothbrush, toothbrush_price)
+
+    toothpaste_price = 1.79
+    catalog.add_product(toothpaste, toothpaste_price)
+
+    apples_price = 1.99
+    catalog.add_product(apples, apples_price)
+
+    total_price_tooth_bundle = toothbrush_price + toothpaste_price
+    total_price = total_price_tooth_bundle + apples_price
+    total_price_with_discount = (
+        (total_price_tooth_bundle * 0.9) * 2
+    ) + apples_price * 0.9
+
+    toothbrush_and_toothpaste_bundle = Bundle(
+        BundleOfferType.TEN_PERCENT_DISCOUNT, [toothbrush, toothpaste]
+    )
+    apples_offer = Offer(SpecialOfferType.TEN_PERCENT_DISCOUNT, apples, 10.0)
+
+    teller = Teller(catalog)
+    teller.add_special_bundle(toothbrush_and_toothpaste_bundle)
+    teller.add_special_offer(apples_offer)
+
+    cart = ShoppingCart()
+    toothbrush_cart_item = ShoppingCartItem(toothbrush, 1)
+    toothpaste_cart_item = ShoppingCartItem(toothpaste, 1)
+    apples_cart_item = ShoppingCartItem(apples, 1)
+    cart.add_item(toothbrush_cart_item)
+    cart.add_item(toothbrush_cart_item)
+    cart.add_item(toothpaste_cart_item)
+    cart.add_item(toothpaste_cart_item)
+    cart.add_item(apples_cart_item)
+
+    receipt = teller.checks_out_articles_from(cart)
+
+    assert total_price_with_discount == pytest.approx(receipt.total_price(), 0.01)
+
+    assert 3 == len(receipt.discounts)
+    assert 3 == len(receipt.items)
+    assert 5 == sum([item.quantity for item in receipt.items])
+
+    assert toothbrush in [item.product for item in receipt.items]
+    assert toothpaste in [item.product for item in receipt.items]
+    assert apples in [item.product for item in receipt.items]
+
+    toothbrush_item = next(
+        (item for item in receipt.items if item.product == toothbrush), None
+    )
+    toothpaste_item = next(
+        (item for item in receipt.items if item.product == toothpaste), None
+    )
+    apples_item = next((item for item in receipt.items if item.product == apples), None)
+
+    assert toothbrush_item is not None
+    assert toothpaste_item is not None
+    assert apples_item is not None
+
+    assert 2 == toothbrush_item.quantity
+    assert 2 == toothpaste_item.quantity
+    assert 1 == apples_item.quantity
