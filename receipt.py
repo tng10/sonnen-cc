@@ -1,12 +1,13 @@
+from catalog import SupermarketCatalogItem
 from model_objects import Discount, Product
 from shopping_cart_item import ShoppingCartItem
 
 
 class ReceiptItem:
-    def __init__(self, cart_item: ShoppingCartItem, unit_price: float):
+    def __init__(self, cart_item: ShoppingCartItem, catalog_item: SupermarketCatalogItem):
         self.product: Product = cart_item.product
         self.quantity: float = cart_item.quantity
-        self.price: float = unit_price
+        self.price: float = catalog_item.price
 
     @property
     def total_price(self):

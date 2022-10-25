@@ -1,10 +1,15 @@
-import math
-from typing import Dict
+from typing import Dict, TypedDict
 
-from model_objects import Offer, SpecialOfferType, Discount
+from model_objects import Offer, Discount
 from catalog import SupermarketCatalog, SupermarketCatalogItem
 from receipt import Receipt
 from shopping_cart_item import ShoppingCartItem
+
+
+class OfferCartItemCatalogItem(TypedDict):
+    offer: Offer
+    cart_item: ShoppingCartItem
+    catalog_item: SupermarketCatalogItem | None
 
 
 class ShoppingCart:
@@ -30,6 +35,19 @@ class ShoppingCart:
     def add_item(self, item: ShoppingCartItem) -> None:
         self._items.append(item)
 
+    def get_offer_cart_item_catalog_item_set(
+        self, offers: Dict[str, Offer], catalog: SupermarketCatalog
+    ) -> list[OfferCartItemCatalogItem]:
+        return [
+            {
+                "offer": offers[cart_item.product.name],
+                "cart_item": cart_item,
+                "catalog_item": catalog.find_item_by_product(cart_item.product),
+            }
+            for cart_item in self.items
+            if cart_item.product.name in offers
+        ]
+
     def find_discount(
         self,
         offer: Offer,
@@ -40,58 +58,34 @@ class ShoppingCart:
         if not catalog_item:
             return None
 
-        quantity = cart_item.quantity
-        quantity_as_int = int(quantity)
-        unit_price = catalog_item.price
+        amount: float | None = None
         discount = None
-        x: int = 1
 
-        if offer.offer_type == SpecialOfferType.TWO_FOR_AMOUNT:
-            x = 2
-            if quantity_as_int >= 2:
-                total = (
-                    offer.argument * (quantity_as_int / x)
-                    + quantity_as_int % 2 * unit_price
-                )
-                discount_n = unit_price * quantity - total
-                discount = Discount(
-                    offer.product, "2 for " + str(offer.argument), -discount_n
-                )
-        elif offer.offer_type == SpecialOfferType.THREE_FOR_TWO and quantity_as_int > 2:
-            x = 3
-            number_of_x: int = math.floor(quantity_as_int / x)
-            discount_amount = quantity * unit_price - (
-                (number_of_x * 2 * unit_price) + quantity_as_int % 3 * unit_price
-            )
-            discount = Discount(offer.product, "3 for 2", -discount_amount)
-        elif offer.offer_type == SpecialOfferType.TEN_PERCENT_DISCOUNT:
-            discount = Discount(
-                offer.product,
-                str(offer.argument) + "% off",
-                -quantity * unit_price * offer.argument / 100.0,
-            )
-        elif (
-            offer.offer_type == SpecialOfferType.FIVE_FOR_AMOUNT
-            and quantity_as_int >= 5
-        ):
-            x = 5
-            number_of_x = math.floor(quantity_as_int / x)
-            discount_total = unit_price * quantity - (
-                offer.argument * number_of_x + quantity_as_int % 5 * unit_price
-            )
-            discount = Discount(
-                offer.product, str(x) + " for " + str(offer.argument), -discount_total
-            )
+        amount = Discount.calculate_amount(
+            offer, catalog_item.price, cart_item.quantity
+        )
+        description = Discount.get_description(offer)
+        if amount and description:
+            discount = Discount(offer.product, description, amount)
 
         return discount
 
-    def handle_offers(
-        self, receipt: Receipt, offers: Dict[str, Offer], catalog: SupermarketCatalog
-    ) -> None:
-        for cart_item in self._items:
-            offer = offers.get(cart_item.product.name)
-            if offer:
-                catalog_item = catalog.find_item_by_product(cart_item.product)
-                discount = self.find_discount(offer, cart_item, catalog_item)
-                if discount:
-                    receipt.add_discount(discount)
+    def calculate_discounts(
+        self, offers: Dict[str, Offer], catalog: SupermarketCatalog
+    ) -> list[Discount]:
+        discounts: list[Discount] = []
+        offer_cart_item_catalog_item_set: list[
+            OfferCartItemCatalogItem
+        ] = self.get_offer_cart_item_catalog_item_set(offers, catalog)
+
+        for element in offer_cart_item_catalog_item_set:
+            offer, cart_item, catalog_item = (
+                element["offer"],
+                element["cart_item"],
+                element["catalog_item"],
+            )
+
+            discount = self.find_discount(offer, cart_item, catalog_item)
+            if discount is not None:
+                discounts.append(discount)
+        return discounts
