@@ -21,6 +21,7 @@ class Receipt:
         self._items: list[ReceiptItem] = []
         self._discounts: list[Discount] = []
 
+    @property
     def total_price(self):
         total: float = sum([item.total_price for item in self.items]) + sum(
             [discount.discount_amount for discount in self._discounts]

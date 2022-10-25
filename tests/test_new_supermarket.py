@@ -178,7 +178,7 @@ def test_ten_percent_discount_on_bundle():
 
     receipt = teller.checks_out_articles_from(cart)
 
-    assert total_price_with_discount == pytest.approx(receipt.total_price(), 0.01)
+    assert total_price_with_discount == pytest.approx(receipt.total_price, 0.01)
 
     assert 1 == len(receipt.discounts)
     assert 2 == len(receipt.items)
@@ -230,7 +230,7 @@ def test_ten_percent_discount_on_bundle_and_additional_product():
 
     receipt = teller.checks_out_articles_from(cart)
 
-    assert total_price_with_discount == pytest.approx(receipt.total_price(), 0.01)
+    assert total_price_with_discount == pytest.approx(receipt.total_price, 0.01)
 
     assert 1 == len(receipt.discounts)
     assert 2 == len(receipt.items)
@@ -283,7 +283,7 @@ def test_ten_percent_discount_on_bundle_twice():
 
     receipt = teller.checks_out_articles_from(cart)
 
-    assert total_price_with_discount == pytest.approx(receipt.total_price(), 0.01)
+    assert total_price_with_discount == pytest.approx(receipt.total_price, 0.01)
 
     assert 2 == len(receipt.discounts)
     assert 2 == len(receipt.items)
@@ -348,7 +348,7 @@ def test_ten_percent_discount_on_bundle_twice_and_special_offer():
 
     receipt = teller.checks_out_articles_from(cart)
 
-    assert total_price_with_discount == pytest.approx(receipt.total_price(), 0.01)
+    assert total_price_with_discount == pytest.approx(receipt.total_price, 0.01)
 
     assert 3 == len(receipt.discounts)
     assert 3 == len(receipt.items)

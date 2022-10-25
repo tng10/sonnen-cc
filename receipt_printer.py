@@ -1,56 +1,32 @@
-from model_objects import ProductUnit
+from receipt import Receipt
+from abc import ABC, abstractmethod
 
 
-class ReceiptPrinter:
-    def __init__(self, columns=40):
-        self.columns = columns
+class ReceiptPrinterStrategy(ABC):
+    """
+    The Strategy interface declares operations common to all supported versions
+    of some algorithm.
 
-    def print_receipt(self, receipt):
-        result = ""
-        for item in receipt.items:
-            receipt_item = self.print_receipt_item(item)
-            result += receipt_item
+    The Context uses this interface to call the algorithm defined by Concrete
+    Strategies.
+    """
 
-        for discount in receipt.discounts:
-            discount_presentation = self.print_discount(discount)
-            result += discount_presentation
+    @abstractmethod
+    def output(self, receipt: Receipt) -> str:
+        pass
 
-        result += "\n"
-        result += self.present_total(receipt)
-        return str(result)
 
-    def print_receipt_item(self, item):
-        total_price_printed = self.print_price(item.total_price)
-        name = item.product.name
-        line = self.format_line_with_whitespace(name, total_price_printed)
-        if item.quantity != 1:
-            line += f"  {self.print_price(item.price)} * {self.print_quantity(item)}\n"
-        return line
+class Context:
+    def __init__(self, strategy: ReceiptPrinterStrategy) -> None:
+        self._strategy = strategy
 
-    def format_line_with_whitespace(self, name, value):
-        line = name
-        whitespace_size = self.columns - len(name) - len(value)
-        for i in range(whitespace_size):
-            line += " "
-        line += value
-        line += "\n"
-        return line
+    @property
+    def strategy(self) -> ReceiptPrinterStrategy:
+        return self._strategy
 
-    def print_price(self, price):
-        return "%.2f" % price
+    @strategy.setter
+    def strategy(self, strategy: ReceiptPrinterStrategy) -> None:
+        self._strategy = strategy
 
-    def print_quantity(self, item):
-        if ProductUnit.EACH == item.product.unit:
-            return str(item.quantity)
-        else:
-            return "%.3f" % item.quantity
-
-    def print_discount(self, discount):
-        name = f"{discount.description} ({''.join([product.name for product in discount.products])})"
-        value = self.print_price(discount.discount_amount)
-        return self.format_line_with_whitespace(name, value)
-
-    def present_total(self, receipt):
-        name = "Total: "
-        value = self.print_price(receipt.total_price())
-        return self.format_line_with_whitespace(name, value)
+    def output(self, receipt: Receipt) -> str:
+        return self._strategy.output(receipt)

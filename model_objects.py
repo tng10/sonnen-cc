@@ -58,6 +58,10 @@ class Discount:
         self.discount_amount: float = discount_amount
 
     @property
+    def name(self):
+        return ' & '.join([product.name for product in self.products])
+
+    @property
     def product(self):
         if len(self.products) == 1:
             return self.products[0]

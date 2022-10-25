@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>Results</title>
+</head>
+
+<body>
+  <h1>Receipt</h1>
+
+  <table>
+  {% for item in items %}
+  <tr>
+      <td style="min-width:350px;">
+        <em>{{ item.product.name }}:</em>
+
+        {% if item.quantity != 1 %}
+          <p>
+            <ui>
+              <li>
+                <em>{{ "€ %.2f" | format(item.price) }}:</em> * {{ "%.2f" | format(item.quantity) }}
+              </li>
+            </ul>
+          </p>
+        {% endif %}
+
+      </td>
+      <td style="min-width:150px;vertical-align:top;">{{ "€ %.2f" | format(item.total_price) }}</td>
+  </tr>
+  {% endfor %}
+  </table>
+  
+  <table>
+  {% for discount in discounts %}
+  <tr>
+      <td style="min-width:350px;">
+        <em>{{ discount.description }} ({{ discount.name }}):</em>
+      </td>
+      <td style="min-width:150px;">{{ "€ %.2f" | format(discount.discount_amount) }}</td>
+  </tr>
+  {% endfor %}
+  </table>
+  
+  <table>
+    <tr>
+      <td style="min-width:350px;">Total:</td>
+      <td style="min-width:150px;">{{ "€ %.2f" | format(total) }}</td>
+    </tr>
+  </table>
+  
+</body>
+
+</html>

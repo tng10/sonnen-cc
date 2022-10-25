@@ -25,7 +25,7 @@ def test_ten_percent_discount():
 
     # receipt = teller.checks_out_articles_from(cart)
 
-    # assert 4.975 == pytest.approx(receipt.total_price(), 0.01)
+    # assert 4.975 == pytest.approx(receipt.total_price, 0.01)
     # assert [] == receipt.discounts
     # assert 1 == len(receipt.items)
     # receipt_item = receipt.items[0]
